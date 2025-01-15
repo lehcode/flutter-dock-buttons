@@ -28,36 +28,45 @@ class AppHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Dock(
-          buttons: const [
-            DockButton(
-              icon: Icons.home,
-              label: 'Home',
-              color: const Color(0xFF007AFF),
+      body: Stack(
+        children: [
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 16,
+            child: Center(
+              child: Dock(
+                buttons: const [
+                  DockButton(
+                    icon: Icons.home,
+                    label: 'Home',
+                    color: Color(0xFF007AFF),
+                  ),
+                  DockButton(
+                    icon: Icons.person,
+                    label: 'Profile',
+                    color: Color(0xFF34C759),
+                  ),
+                  DockButton(
+                    icon: Icons.settings,
+                    label: 'Settings',
+                    color: Color(0xFFFF9500),
+                  ),
+                  DockButton(
+                    icon: Icons.message,
+                    label: 'Messages',
+                    color: Colors.purple,
+                  ),
+                  DockButton(
+                    icon: Icons.notifications,
+                    label: 'Notifications',
+                    color: Colors.red,
+                  ),
+                ],
+              ),
             ),
-            DockButton(
-              icon: Icons.person,
-              label: 'Profile',
-              color: const Color(0xFF34C759),
-            ),
-            DockButton(
-              icon: Icons.settings,
-              label: 'Settings',
-              color: const Color(0xFFFF9500),
-            ),
-            DockButton(
-              icon: Icons.message,
-              label: 'Messages',
-              color: Colors.purple,
-            ),
-            DockButton(
-              icon: Icons.notifications,
-              label: 'Notifications',
-              color: Colors.red,
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

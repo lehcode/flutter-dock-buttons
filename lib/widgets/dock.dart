@@ -14,18 +14,18 @@ class Dock extends StatefulWidget {
   const Dock({
     super.key,
     required this.buttons,
-    this.itemBaseWidth = 48.0,
-    this.itemBaseHeight = 48.0,
-    this.maxScale = 1.8,
-    this.spacing = 4.0,
-    this.backgroundOpacity = 0.3,
+    this.itemBaseWidth = 64.0,
+    this.itemBaseHeight = 64.0,
+    this.maxScale = 1.3,
+    this.spacing = 23.0,
+    this.backgroundOpacity = 0.1,
   });
 
   @override
   State<Dock> createState() => _DockState();
 }
 
-class _DockState extends State<Dock> with SingleTickerProviderStateMixin {
+class _DockState extends State<Dock> {
   Offset? _mousePosition;
   final _dockKey = GlobalKey();
   int? _dragTargetIndex;
@@ -39,20 +39,24 @@ class _DockState extends State<Dock> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      onHover: _updateMousePosition,
-      onExit: (_) => setState(() => _mousePosition = null),
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 6.0),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.black.withAlpha(15),
+        borderRadius: BorderRadius.circular(16.0),
+      ),
+      padding: const EdgeInsets.all(16.0),
+      child: MouseRegion(
+        onHover: _updateMousePosition,
+        onExit: (_) => setState(() => _mousePosition = null),
         child: Container(
           key: _dockKey,
-          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-          decoration: BoxDecoration(
-            color: Colors.black.withAlpha(20),
-            borderRadius: BorderRadius.circular(16.0),
+          constraints: BoxConstraints(
+            minHeight: widget.itemBaseHeight * widget.maxScale,
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: _buildDockItems(),
           ),
         ),
@@ -71,18 +75,25 @@ class _DockState extends State<Dock> with SingleTickerProviderStateMixin {
       }
 
       double scale = 1.0;
+      double yOffset = 0.0;
       if (_mousePosition != null && dockPosition != null) {
-        final itemCenter = dockPosition.dx +
-            (i * (widget.itemBaseWidth + widget.spacing)) +
-            widget.itemBaseWidth / 2;
-        
-        final distance = (_mousePosition!.dx - itemCenter).abs();
-        final maxDistance = widget.itemBaseWidth * 2;
-
-        if (distance < maxDistance) {
-          scale = 1.0 +
-              (widget.maxScale - 1.0) *
-                  (1.0 - (distance / maxDistance));
+        final hoveredIndex =
+            _getHoveredButtonIndex(_mousePosition!, dockPosition);
+        if (hoveredIndex != -1) {
+          final distance = (i - hoveredIndex).abs();
+          if (distance <= 2) {
+            if (distance == 0) {
+              scale = widget.maxScale;
+              yOffset =
+                  -(widget.itemBaseHeight * (widget.maxScale - 1.0)) + 6.0;
+            } else if (distance == 1) {
+              scale = 1.0 + (widget.maxScale - 1.0) * 0.6;
+              yOffset = -(widget.itemBaseHeight * (scale - 1.0));
+            } else if (distance == 2) {
+              scale = 1.0 + (widget.maxScale - 1.0) * 0.3;
+              yOffset = -(widget.itemBaseHeight * (scale - 1.0));
+            }
+          }
         }
       }
 
@@ -103,18 +114,26 @@ class _DockState extends State<Dock> with SingleTickerProviderStateMixin {
           onLeave: (_) => setState(() => _dragTargetIndex = null),
           builder: (context, candidateData, rejectedData) {
             return TweenAnimationBuilder<double>(
-              tween: Tween(begin: 1.0, end: scale),
-              duration: const Duration(milliseconds: 150),
-              curve: Curves.easeOutCubic,
-              builder: (context, scale, child) {
-                return Transform.scale(
-                  scale: scale,
-                  child: DockButtonWidget(
-                    button: _currentButtons[i],
-                    width: widget.itemBaseWidth,
-                    height: widget.itemBaseHeight,
-                    scale: scale,
-                  ),
+              tween: Tween(begin: 0.0, end: yOffset),
+              duration: const Duration(milliseconds: 900),
+              curve: Curves.easeOutCirc,
+              builder: (context, animatedOffset, child) {
+                return TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 1.0, end: scale),
+                  duration: const Duration(milliseconds: 900),
+                  curve: Curves.easeOutCirc,
+                  builder: (context, animatedScale, child) {
+                    return Transform(
+                      transform: Matrix4.identity()
+                        ..translate(0.0, animatedOffset)
+                        ..scale(animatedScale),
+                      alignment: Alignment.bottomCenter,
+                      child: DockButtonWidget(
+                        button: _currentButtons[i],
+                        scale: animatedScale,
+                      ),
+                    );
+                  },
                 );
               },
             );
@@ -128,5 +147,20 @@ class _DockState extends State<Dock> with SingleTickerProviderStateMixin {
 
   void _updateMousePosition(PointerHoverEvent event) {
     setState(() => _mousePosition = event.position);
+  }
+
+  int _getHoveredButtonIndex(Offset mousePosition, Offset dockPosition) {
+    final buttonWidth = widget.itemBaseWidth;
+    final totalButtonWidth = buttonWidth + widget.spacing;
+
+    for (int i = 0; i < _currentButtons.length; i++) {
+      final buttonStart = dockPosition.dx + 16.0 + (i * totalButtonWidth);
+      final buttonEnd = buttonStart + buttonWidth;
+
+      if (mousePosition.dx >= buttonStart && mousePosition.dx <= buttonEnd) {
+        return i;
+      }
+    }
+    return -1;
   }
 }
