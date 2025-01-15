@@ -6,11 +6,19 @@ const buttonSize = 64.0;
 class DockButtonWidget extends StatefulWidget {
   final DockButton button;
   final double scale;
+  final VoidCallback? onDragStarted;
+  final VoidCallback? onDragEnd;
+  final VoidCallback? onDragCompleted;
+  final VoidCallback? onDraggableCanceled;
 
   const DockButtonWidget({
     super.key,
     required this.button,
     this.scale = 1.0,
+    this.onDragStarted,
+    this.onDragEnd,
+    this.onDragCompleted,
+    this.onDraggableCanceled,
   });
 
   double get width => buttonSize * scale;
@@ -34,7 +42,8 @@ class _DockButtonWidgetState extends State<DockButtonWidget> {
       },
       onPanUpdate: (details) {
         if (_dragStartPosition != null) {
-          final distance = (_dragStartPosition! - details.localPosition).distance;
+          final distance =
+              (_dragStartPosition! - details.localPosition).distance;
           if (distance > 10.0) {
             setState(() => _isDragging = true);
           }
@@ -71,26 +80,33 @@ class _DockButtonWidgetState extends State<DockButtonWidget> {
             ),
           ),
         ),
-        childWhenDragging: Opacity(
-          opacity: 0.3,
-          child: Container(
-            width: widget.width,
-            height: widget.height,
-            decoration: BoxDecoration(
-              color: widget.button.color.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
-        onDragStarted: () => setState(() => _isDragging = true),
-        onDragEnd: (details) => setState(() {
-          _isDragging = false;
-          _dragStartPosition = null;
-        }),
-        onDragCompleted: () => setState(() {
-          _isDragging = false;
-          _dragStartPosition = null;
-        }),
+        childWhenDragging:
+            const SizedBox.shrink(), // Remove placeholder completely
+        onDragStarted: () {
+          setState(() => _isDragging = true);
+          widget.onDragStarted?.call();
+        },
+        onDragEnd: (details) {
+          setState(() {
+            _isDragging = false;
+            _dragStartPosition = null;
+          });
+          widget.onDragEnd?.call();
+        },
+        onDragCompleted: () {
+          setState(() {
+            _isDragging = false;
+            _dragStartPosition = null;
+          });
+          widget.onDragCompleted?.call();
+        },
+        onDraggableCanceled: (_, __) {
+          setState(() {
+            _isDragging = false;
+            _dragStartPosition = null;
+          });
+          widget.onDraggableCanceled?.call();
+        },
         child: Container(
           width: buttonSize,
           height: buttonSize,
@@ -110,7 +126,7 @@ class _DockButtonWidgetState extends State<DockButtonWidget> {
                 alignment: Alignment.center,
                 children: [
                   AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
+                    duration: const Duration(milliseconds: 300),
                     width: buttonSize,
                     height: buttonSize,
                     decoration: BoxDecoration(
@@ -125,28 +141,6 @@ class _DockButtonWidgetState extends State<DockButtonWidget> {
                       size: 24 * widget.scale,
                     ),
                   ),
-                  if (_isHovered && !_isDragging)
-                    Positioned(
-                      bottom: -32,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.85),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          widget.button.label,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ),
                 ],
               ),
             ),
