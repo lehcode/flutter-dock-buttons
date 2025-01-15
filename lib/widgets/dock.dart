@@ -10,6 +10,7 @@ class Dock extends StatefulWidget {
   final double maxScale;
   final double spacing;
   final double backgroundOpacity;
+  final Function(DockButton)? onButtonDraggedOutside;
 
   const Dock({
     super.key,
@@ -19,6 +20,7 @@ class Dock extends StatefulWidget {
     this.maxScale = 1.3,
     this.spacing = 23.0,
     this.backgroundOpacity = 0.1,
+    this.onButtonDraggedOutside,
   });
 
   @override
@@ -30,12 +32,15 @@ class _DockState extends State<Dock> {
   final _dockKey = GlobalKey();
   int? _dragTargetIndex;
   List<DockButton> _currentButtons = [];
-  Set<int> _draggingIndices = {};
-  
+  final Set<int> _draggingIndices = {};
+
   @override
   void initState() {
     super.initState();
     _currentButtons = List.from(widget.buttons);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _updateDockBounds();
+    });
   }
 
   @override
@@ -50,15 +55,20 @@ class _DockState extends State<Dock> {
   }
 
   void _handleDragStart(int index) {
-    setState(() {
-      _draggingIndices.add(index);
-    });
+    if (mounted) {
+      setState(() {
+        _draggingIndices.add(index);
+      });
+    }
   }
 
   void _handleDragEnd(int index) {
-    setState(() {
-      _draggingIndices.remove(index);
-    });
+    if (mounted) {
+      setState(() {
+        _draggingIndices.remove(index);
+        _checkIntersections();
+      });
+    }
   }
 
   void _arrangeButtons() {
@@ -67,6 +77,49 @@ class _DockState extends State<Dock> {
         _currentButtons = List.from(widget.buttons);
         _dragTargetIndex = null;
       });
+    }
+  }
+
+  final Map<int, Rect> _buttonBounds = {};
+  Rect? _dockBounds;
+
+  void _updateButtonBounds(int index, Rect bounds) {
+    setState(() {
+      _buttonBounds[index] = bounds;
+    });
+    _checkIntersections();
+  }
+
+  void _updateDockBounds() {
+    final RenderBox? renderBox =
+        _dockKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox != null) {
+      setState(() {
+        _dockBounds = Offset.zero & renderBox.size;
+      });
+    }
+  }
+
+  void _checkIntersections([Offset? dropPosition]) {
+    if (_dockBounds == null) return;
+    if (dropPosition == null) return; // Early return if no position provided
+
+    final RenderBox? dockBox =
+        _dockKey.currentContext?.findRenderObject() as RenderBox?;
+    if (dockBox == null) return;
+
+    final dockGlobalPosition = dockBox.localToGlobal(Offset.zero);
+    final dockRect = Rect.fromLTWH(dockGlobalPosition.dx, dockGlobalPosition.dy,
+        dockBox.size.width, dockBox.size.height);
+
+    if (!dockRect.contains(dropPosition)) {
+      if (_dragTargetIndex != null) {
+        final button = _currentButtons[_dragTargetIndex!];
+        setState(() {
+          _currentButtons.removeAt(_dragTargetIndex!);
+          widget.onButtonDraggedOutside?.call(button);
+        });
+      }
     }
   }
 
@@ -87,7 +140,8 @@ class _DockState extends State<Dock> {
             minHeight: widget.itemBaseHeight * widget.maxScale,
           ),
           child: AnimatedBuilder(
-            animation: AlwaysStoppedAnimation(0), // Forces rebuild on state changes
+            animation:
+                AlwaysStoppedAnimation(0), // Forces rebuild on state changes
             builder: (context, child) {
               return Row(
                 mainAxisSize: MainAxisSize.min,
@@ -114,14 +168,18 @@ class _DockState extends State<Dock> {
 
       double scale = 1.0;
       double yOffset = 0.0;
-      if (_mousePosition != null && dockPosition != null && !_draggingIndices.contains(i)) {
-        final hoveredIndex = _getHoveredButtonIndex(_mousePosition!, dockPosition);
+      if (_mousePosition != null &&
+          dockPosition != null &&
+          !_draggingIndices.contains(i)) {
+        final hoveredIndex =
+            _getHoveredButtonIndex(_mousePosition!, dockPosition);
         if (hoveredIndex != -1) {
           final distance = (i - hoveredIndex).abs();
           if (distance <= 2) {
             if (distance == 0) {
               scale = widget.maxScale;
-              yOffset = -(widget.itemBaseHeight * (widget.maxScale - 1.0)) + 6.0;
+              yOffset =
+                  -(widget.itemBaseHeight * (widget.maxScale - 1.0)) + 6.0;
             } else if (distance == 1) {
               scale = 1.0 + (widget.maxScale - 1.0) * 0.6;
               yOffset = -(widget.itemBaseHeight * (scale - 1.0));
@@ -142,16 +200,9 @@ class _DockState extends State<Dock> {
       items.add(
         DragTarget<DockButton>(
           onWillAccept: (data) => data != null,
-          onAccept: (data) {
-            final fromIndex = _currentButtons.indexOf(data);
-            final toIndex = i;
-            if (fromIndex != -1 && fromIndex != toIndex) {
-              setState(() {
-                final button = _currentButtons.removeAt(fromIndex);
-                _currentButtons.insert(toIndex, button);
-                _arrangeButtons();
-              });
-            }
+          onAcceptWithDetails: (details) {
+            final dropPosition = details.offset;
+            _checkIntersections(dropPosition);
           },
           onLeave: (_) => _arrangeButtons(),
           builder: (context, candidateData, rejectedData) {
@@ -177,6 +228,8 @@ class _DockState extends State<Dock> {
                         onDragEnd: () => _handleDragEnd(i),
                         onDragCompleted: () => _handleDragEnd(i),
                         onDraggableCanceled: () => _handleDragEnd(i),
+                        onBoundsChanged: (bounds) =>
+                            _updateButtonBounds(i, bounds),
                       ),
                     );
                   },
@@ -201,7 +254,7 @@ class _DockState extends State<Dock> {
 
     for (int i = 0; i < _currentButtons.length; i++) {
       if (_draggingIndices.contains(i)) continue;
-      
+
       final buttonStart = dockPosition.dx + 16.0 + (i * totalButtonWidth);
       final buttonEnd = buttonStart + buttonWidth;
 

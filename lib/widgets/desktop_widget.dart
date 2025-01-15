@@ -39,24 +39,30 @@ class _DesktopWidgetState extends State<DesktopWidget> {
           final DockButton button = details.data;
           final RenderBox box = context.findRenderObject() as RenderBox;
           final localPosition = box.globalToLocal(details.offset);
-          
-          setState(() {
-            droppedIcons.add(
-              _DesktopIcon(
-                button: button,
-                position: localPosition,
-              ),
-            );
-          });
-          
-          // Call the callback to remove the button from dock
-          widget.onButtonDropped(button);
+
+          // Get dock bounds
+          final dockBox = context.findRenderObject() as RenderBox;
+          final dockGlobalPosition = dockBox.localToGlobal(Offset.zero);
+          final dockRect = Rect.fromLTWH(dockGlobalPosition.dx,
+              dockGlobalPosition.dy, dockBox.size.width, dockBox.size.height);
+
+          // Only add to desktop if dropped outside dock
+          if (!dockRect.contains(details.offset)) {
+            setState(() {
+              droppedIcons.add(
+                _DesktopIcon(
+                  button: button,
+                  position: localPosition,
+                ),
+              );
+              widget.onButtonDropped(button);
+            });
+          }
         },
         builder: (context, candidateData, rejectedData) {
           return Stack(
             children: [
               widget.child,
-              
               if (candidateData.isNotEmpty)
                 Container(
                   color: Colors.white.withOpacity(0.1),
@@ -71,12 +77,11 @@ class _DesktopWidgetState extends State<DesktopWidget> {
                     ),
                   ),
                 ),
-                
               ...droppedIcons.map((icon) => Positioned(
-                left: icon.position.dx - 32,
-                top: icon.position.dy - 32,
-                child: _DesktopIconWidget(icon: icon),
-              )).toList(),
+                    left: icon.position.dx - 32,
+                    top: icon.position.dy - 32,
+                    child: _DesktopIconWidget(icon: icon),
+                  )),
             ],
           );
         },
@@ -117,7 +122,8 @@ class _DesktopIconWidgetState extends State<_DesktopIconWidget> {
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: _isHovered ? Colors.white.withOpacity(0.1) : Colors.transparent,
+          color:
+              _isHovered ? Colors.white.withOpacity(0.1) : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Column(
