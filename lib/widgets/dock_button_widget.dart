@@ -38,6 +38,7 @@ class _DockButtonWidgetState extends State<DockButtonWidget> {
   bool _isPressed = false;
   bool _isDragging = false;
   Offset? _dragStartPosition;
+  bool _isDisposed = false;
 
   @override
   void initState() {
@@ -47,7 +48,15 @@ class _DockButtonWidgetState extends State<DockButtonWidget> {
     });
   }
 
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
   void _updateBounds() {
+    if (_isDisposed || !mounted) return;
+    
     final RenderBox? renderBox =
         widget.buttonKey.currentContext?.findRenderObject() as RenderBox?;
     if (renderBox != null) {

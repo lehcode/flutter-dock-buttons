@@ -32,7 +32,16 @@ class _DockState extends State<Dock> {
   final _dockKey = GlobalKey();
   int? _dragTargetIndex;
   List<DockButton> _currentButtons = [];
-  final Set<int> _draggingIndices = {};
+  int? _draggingIndex;
+  bool _isDisposed = false;
+
+  @override
+  void dispose() {
+    // Cancel any pending operations before disposal
+    WidgetsBinding.instance.removeObserver(this as WidgetsBindingObserver);
+    _isDisposed = true;
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -49,24 +58,27 @@ class _DockState extends State<Dock> {
     if (widget.buttons != oldWidget.buttons) {
       setState(() {
         _currentButtons = List.from(widget.buttons);
-        _draggingIndices.clear();
+        _draggingIndex = null;
       });
     }
   }
 
   void _handleDragStart(int index) {
-    if (mounted) {
+    if (!_isDisposed && mounted) {
       setState(() {
-        _draggingIndices.add(index);
+        _draggingIndex = index;
+        // Remove dragged button from current buttons
+        _currentButtons = List.from(widget.buttons);
+        _currentButtons.removeAt(index);
       });
     }
   }
 
   void _handleDragEnd(int index) {
-    if (mounted) {
+    if (!_isDisposed && mounted) {
       setState(() {
-        _draggingIndices.remove(index);
-        _checkIntersections();
+        _draggingIndex = null;
+        _currentButtons = List.from(widget.buttons);
       });
     }
   }
@@ -84,13 +96,19 @@ class _DockState extends State<Dock> {
   Rect? _dockBounds;
 
   void _updateButtonBounds(int index, Rect bounds) {
-    setState(() {
-      _buttonBounds[index] = bounds;
-    });
-    _checkIntersections();
+    if (_isDisposed || !mounted) return;
+    
+    if (!_isDisposed && mounted) {
+      setState(() {
+        _buttonBounds[index] = bounds;
+      });
+      _checkIntersections();
+    }
   }
 
   void _updateDockBounds() {
+    if (_isDisposed || !mounted) return;
+
     final RenderBox? renderBox =
         _dockKey.currentContext?.findRenderObject() as RenderBox?;
     if (renderBox != null) {
@@ -101,8 +119,12 @@ class _DockState extends State<Dock> {
   }
 
   void _checkIntersections([Offset? dropPosition]) {
-    if (_dockBounds == null) return;
-    if (dropPosition == null) return; // Early return if no position provided
+    if (_isDisposed || !mounted || _dockBounds == null) return;
+    
+    if (_dockBounds == null) {
+      debugPrint('No dock bounds');
+      return;
+    }
 
     final RenderBox? dockBox =
         _dockKey.currentContext?.findRenderObject() as RenderBox?;
@@ -112,15 +134,31 @@ class _DockState extends State<Dock> {
     final dockRect = Rect.fromLTWH(dockGlobalPosition.dx, dockGlobalPosition.dy,
         dockBox.size.width, dockBox.size.height);
 
-    if (!dockRect.contains(dropPosition)) {
-      if (_dragTargetIndex != null) {
-        final button = _currentButtons[_dragTargetIndex!];
-        setState(() {
-          _currentButtons.removeAt(_dragTargetIndex!);
-          widget.onButtonDraggedOutside?.call(button);
-        });
+    if (dropPosition != null) {
+      final bool isOutside = !dockRect.contains(dropPosition);
+
+      // Only notify on state change
+      if (isOutside) {
+        debugPrint(
+            'Button drag ${isOutside ? "exited" : "entered"} dock bounds at $dropPosition');
+      }
+
+      if (isOutside) {
+        _showOverlayMessage(
+            'Button ${isOutside ? "exited" : "entered"} dock bounds');
+        debugPrint(
+            'Button drag ${isOutside ? "exited" : "entered"} dock bounds at $dropPosition');
       }
     }
+  }
+
+  void _showOverlayMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 1),
+      ),
+    );
   }
 
   @override
@@ -166,11 +204,16 @@ class _DockState extends State<Dock> {
         items.add(SizedBox(width: widget.spacing));
       }
 
+      if (_draggingIndex == i) {
+        continue;
+      }
+
       double scale = 1.0;
       double yOffset = 0.0;
+
       if (_mousePosition != null &&
           dockPosition != null &&
-          !_draggingIndices.contains(i)) {
+          _draggingIndex != i) {
         final hoveredIndex =
             _getHoveredButtonIndex(_mousePosition!, dockPosition);
         if (hoveredIndex != -1) {
@@ -192,17 +235,17 @@ class _DockState extends State<Dock> {
       }
 
       // Skip rendering if button is being dragged
-      if (_draggingIndices.contains(i)) {
-        items.add(const SizedBox(width: buttonSize));
-        continue;
-      }
+      // if (_draggingIndex == i) {
+      //   items.add(const SizedBox(width: buttonSize));
+      //   continue;
+      // }
 
       items.add(
         DragTarget<DockButton>(
           onWillAccept: (data) => data != null,
           onAcceptWithDetails: (details) {
-            final dropPosition = details.offset;
-            _checkIntersections(dropPosition);
+            debugPrint('Drop detected at: ${details.offset}'); // Add this line
+            _checkIntersections(details.offset);
           },
           onLeave: (_) => _arrangeButtons(),
           builder: (context, candidateData, rejectedData) {
@@ -245,7 +288,9 @@ class _DockState extends State<Dock> {
   }
 
   void _updateMousePosition(PointerHoverEvent event) {
-    setState(() => _mousePosition = event.position);
+    if (!_isDisposed && mounted) {
+      setState(() => _mousePosition = event.position);
+    }
   }
 
   int _getHoveredButtonIndex(Offset mousePosition, Offset dockPosition) {
@@ -253,7 +298,7 @@ class _DockState extends State<Dock> {
     final totalButtonWidth = buttonWidth + widget.spacing;
 
     for (int i = 0; i < _currentButtons.length; i++) {
-      if (_draggingIndices.contains(i)) continue;
+      if (_draggingIndex == i) continue;
 
       final buttonStart = dockPosition.dx + 16.0 + (i * totalButtonWidth);
       final buttonEnd = buttonStart + buttonWidth;
