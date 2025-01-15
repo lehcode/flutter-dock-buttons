@@ -68,8 +68,8 @@ class _DockState extends State<Dock> {
       setState(() {
         _draggingIndex = index;
         // Remove dragged button from current buttons
-        _currentButtons = List.from(widget.buttons);
-        _currentButtons.removeAt(index);
+        // _currentButtons = List.from(widget.buttons);
+        // _currentButtons.removeAt(index);
       });
     }
   }
@@ -78,7 +78,6 @@ class _DockState extends State<Dock> {
     if (!_isDisposed && mounted) {
       setState(() {
         _draggingIndex = null;
-        _currentButtons = List.from(widget.buttons);
       });
     }
   }
@@ -97,7 +96,7 @@ class _DockState extends State<Dock> {
 
   void _updateButtonBounds(int index, Rect bounds) {
     if (_isDisposed || !mounted) return;
-    
+
     if (!_isDisposed && mounted) {
       setState(() {
         _buttonBounds[index] = bounds;
@@ -120,7 +119,7 @@ class _DockState extends State<Dock> {
 
   void _checkIntersections([Offset? dropPosition]) {
     if (_isDisposed || !mounted || _dockBounds == null) return;
-    
+
     if (_dockBounds == null) {
       debugPrint('No dock bounds');
       return;
@@ -204,9 +203,9 @@ class _DockState extends State<Dock> {
         items.add(SizedBox(width: widget.spacing));
       }
 
-      if (_draggingIndex == i) {
-        continue;
-      }
+      // if (_draggingIndex == i) {
+      //   continue;
+      // }
 
       double scale = 1.0;
       double yOffset = 0.0;

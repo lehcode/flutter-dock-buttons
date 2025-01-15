@@ -63,20 +63,20 @@ class _DesktopWidgetState extends State<DesktopWidget> {
           return Stack(
             children: [
               widget.child,
-              if (candidateData.isNotEmpty)
-                Container(
-                  color: Colors.white.withOpacity(0.1),
-                  child: const Center(
-                    child: Text(
-                      'Drop here to add to desktop',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
+              // if (candidateData.isNotEmpty)
+              //   Container(
+              //     color: Colors.white.withOpacity(0.1),
+              //     child: const Center(
+              //       child: Text(
+              //         'Drop here to add to desktop',
+              //         style: TextStyle(
+              //           color: Colors.white,
+              //           fontSize: 24,
+              //           fontWeight: FontWeight.bold,
+              //         ),
+              //       ),
+              //     ),
+              //   ),
               ...droppedIcons.map((icon) => Positioned(
                     left: icon.position.dx - 32,
                     top: icon.position.dy - 32,
