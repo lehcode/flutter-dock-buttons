@@ -27,15 +27,13 @@ class Dock extends StatefulWidget {
   State<Dock> createState() => _DockState();
 }
 
-class _DockState extends State<Dock> with TickerProviderStateMixin {
+class _DockState extends State<Dock> {
   Offset? _mousePosition;
   final _dockKey = GlobalKey();
   int? _dragTargetIndex;
   List<DockButton> _currentButtons = [];
   int? _draggingIndex;
   bool _isDisposed = false;
-  final Map<int, Rect> _buttonBounds = {};
-  Rect? _dockBounds;
 
   @override
   /// Disposes of the dock state, removing any observers, clearing button bounds,
@@ -43,8 +41,8 @@ class _DockState extends State<Dock> with TickerProviderStateMixin {
   /// that no further state updates occur and resources are properly released. 
   /// Always call the superclass's dispose method to complete the disposal process.
   void dispose() {
+    // Cancel any pending operations before disposal
     WidgetsBinding.instance.removeObserver(this as WidgetsBindingObserver);
-    _buttonBounds.clear();
     _mousePosition = null;
     _isDisposed = true;
     _currentButtons.clear();
@@ -145,9 +143,6 @@ class _DockState extends State<Dock> with TickerProviderStateMixin {
   void _updateButtonBounds(int index, Rect bounds) {
     if (_isDisposed || !mounted) return;
 
-    setState(() {
-      _buttonBounds[index] = bounds;
-    });
     _checkIntersections();
   }
 
@@ -165,11 +160,6 @@ class _DockState extends State<Dock> with TickerProviderStateMixin {
 
     final RenderBox? renderBox =
         _dockKey.currentContext?.findRenderObject() as RenderBox?;
-    if (renderBox != null) {
-      setState(() {
-        _dockBounds = Offset.zero & renderBox.size;
-      });
-    }
   }
 
   /// Checks for intersections between the dock and a potential drop position.
@@ -184,12 +174,7 @@ class _DockState extends State<Dock> with TickerProviderStateMixin {
   /// where an item might have been dropped. If null, no intersection checks
   /// are performed.
   void _checkIntersections([Offset? dropPosition]) {
-    if (_isDisposed || !mounted || _dockBounds == null) return;
-
-    if (_dockBounds == null) {
-      debugPrint('No dock bounds');
-      return;
-    }
+    if (_isDisposed || !mounted) return;
 
     final RenderBox? dockBox =
         _dockKey.currentContext?.findRenderObject() as RenderBox?;
@@ -324,6 +309,7 @@ class _DockState extends State<Dock> with TickerProviderStateMixin {
         DragTarget<DockButton>(
           onWillAccept: (data) => data != null,
           onAcceptWithDetails: (details) {
+            debugPrint('Drop detected at: ${details.offset}'); // Add this line
             _checkIntersections(details.offset);
           },
           onLeave: (_) => _arrangeButtons(),
@@ -350,6 +336,8 @@ class _DockState extends State<Dock> with TickerProviderStateMixin {
                         onDragEnd: () => _handleDragEnd(i),
                         onDragCompleted: () => _handleDragEnd(i),
                         onDraggableCanceled: () => _handleDragEnd(i),
+                        onBoundsChanged: (bounds) =>
+                            _updateButtonBounds(i, bounds),
                       ),
                     );
                   },
