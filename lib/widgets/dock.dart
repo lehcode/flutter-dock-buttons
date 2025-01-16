@@ -37,9 +37,12 @@ class _DockState extends State<Dock> {
 
   @override
   void dispose() {
-    // Cancel any pending operations before disposal
     WidgetsBinding.instance.removeObserver(this as WidgetsBindingObserver);
+    _buttonBounds.clear();
+    _mousePosition = null;
     _isDisposed = true;
+    _currentButtons.clear();
+    
     super.dispose();
   }
 

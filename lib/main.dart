@@ -31,6 +31,19 @@ class AppHomePage extends StatefulWidget {
 }
 
 class _AppHomePageState extends State<AppHomePage> {
+  bool _isDisposed = false;
+
+  @override
+  void dispose() {
+    // Clear dock buttons list
+    _dockButtons.clear();
+    
+    // Mark as disposed
+    _isDisposed = true;
+    
+    super.dispose();
+  }
+
   // Make _dockButtons non-final so we can modify it
   List<DockButton> _dockButtons = [
     const DockButton(
@@ -61,14 +74,15 @@ class _AppHomePageState extends State<AppHomePage> {
   ];
 
   void _onButtonMovedToDesktop(DockButton button) {
-    setState(() {
-      // Find and remove the button from dock
-      _dockButtons = _dockButtons.where((b) => 
-        b.icon != button.icon || 
-        b.label != button.label || 
-        b.color != button.color
-      ).toList();
-    });
+    if (!_isDisposed && mounted) {
+      setState(() {
+        _dockButtons = _dockButtons.where((b) => 
+          b.icon != button.icon || 
+          b.label != button.label || 
+          b.color != button.color
+        ).toList();
+      });
+    }
   }
 
   @override

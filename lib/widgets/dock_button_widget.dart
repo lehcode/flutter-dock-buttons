@@ -41,16 +41,23 @@ class _DockButtonWidgetState extends State<DockButtonWidget> {
   bool _isDisposed = false;
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _updateBounds();
-    });
+  void setState(VoidCallback fn) {
+    if (!_isDisposed && mounted) {
+      super.setState(fn);
+    }
   }
 
   @override
   void dispose() {
+    // Clear any drag related states
+    _dragStartPosition = null;
+    
+    // Reset all state flags
+    _isHovered = false;
+    _isPressed = false;
+    _isDragging = false;
     _isDisposed = true;
+    
     super.dispose();
   }
 

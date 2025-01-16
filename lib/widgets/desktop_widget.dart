@@ -18,7 +18,23 @@ class DesktopWidget extends StatefulWidget {
 }
 
 class _DesktopWidgetState extends State<DesktopWidget> {
+  bool _isDisposed = false;
   List<_DesktopIcon> droppedIcons = [];
+
+  @override
+  // Modify state updates to check disposed flag
+  void setState(VoidCallback fn) {
+    if (!_isDisposed && mounted) {
+      super.setState(fn);
+    }
+  }
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    droppedIcons.clear();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
