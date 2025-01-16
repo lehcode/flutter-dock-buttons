@@ -6,7 +6,6 @@ A Flutter application demonstrating an animated dock interface inspired by macOS
 
 - Animated dock with hover effects
 - Draggable buttons with smooth scaling
-- Desktop icon placement system
 - Material Design 3 theming
 - Gradient background
 - Interactive button feedback
@@ -63,7 +62,7 @@ lib/
 - `DockButton` - Model class for dock button data
 - `Dock` - Main dock container with animation logic
 - `DockButtonWidget` - Individual button with drag functionality
-- `DesktopWidget` - Desktop area handling button drops
+- `DesktopWidget` - Desktop area supposed to handle button drops
 
 ## Tech Stack
 
