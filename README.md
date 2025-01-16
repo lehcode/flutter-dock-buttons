@@ -1,16 +1,88 @@
-# dock_animate
+# Animated Dock Buttons
 
-A new Flutter project.
+A Flutter application demonstrating an animated dock interface inspired by macOS, with draggable buttons and smooth animations.
+
+## Features
+
+- Animated dock with hover effects
+- Draggable buttons with smooth scaling
+- Desktop icon placement system
+- Material Design 3 theming
+- Gradient background
+- Interactive button feedback
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+### Prerequisites
 
-A few resources to get you started if this is your first Flutter project:
+- Flutter SDK
+- Dart SDK
+- Git
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### Installation
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+#### Clone the repository
+
+```bash
+git clone https://github.com/yourusername/dock-buttons.git
+```
+
+#### Navigate to project directory
+
+```bash
+cd dock-buttons
+```
+
+#### Install dependencies
+
+```bash
+flutter pub get
+```
+
+#### Run the application
+
+```bash
+flutter run -d chrome
+```
+
+## Project Structure
+
+```bash
+lib/
+├── models/
+│   └── dock_button.dart
+├── widgets/
+│   ├── desktop_widget.dart
+│   ├── dock.dart
+│   └── dock_button_widget.dart
+└── main.dart
+```
+
+## Components
+
+- `DockButton` - Model class for dock button data
+- `Dock` - Main dock container with animation logic
+- `DockButtonWidget` - Individual button with drag functionality
+- `DesktopWidget` - Desktop area handling button drops
+
+## Tech Stack
+
+- Language: Dart
+- Framework: Flutter
+
+## Deployment
+
+The application is deployed using GitHub Pages. Visit:
+https://lehcode.github.io/dock-buttons/
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- Inspired by macOS dock functionality
+- Flutter animation system
+- Material Design guidelines
+
+---
