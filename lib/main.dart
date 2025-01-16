@@ -11,6 +11,9 @@ class DockApp extends StatelessWidget {
   const DockApp({super.key});
 
   @override
+  /// Builds the main application widget.
+  ///
+  /// - [context] is the build context in which the widget is built.
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Animated Dock',
@@ -73,23 +76,16 @@ class _AppHomePageState extends State<AppHomePage> {
     ),
   ];
 
-  void _onButtonMovedToDesktop(DockButton button) {
-    if (!_isDisposed && mounted) {
-      setState(() {
-        _dockButtons = _dockButtons.where((b) => 
-          b.icon != button.icon || 
-          b.label != button.label || 
-          b.color != button.color
-        ).toList();
-      });
-    }
-  }
-
   @override
+  /// Builds the main application widget.
+  ///
+  /// - [context] is the build context in which the widget is built.
+  ///
+  /// Returns a [Scaffold] widget with a [DesktopWidget] as its body. The
+  /// [DesktopWidget] contains a [Stack] with a [Dock] widget at the bottom.
   Widget build(BuildContext context) {
     return Scaffold(
       body: DesktopWidget(
-        onButtonDropped: _onButtonMovedToDesktop,
         child: Stack(
           children: [
             Positioned(

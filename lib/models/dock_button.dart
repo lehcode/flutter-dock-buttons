@@ -13,6 +13,9 @@ class DockButton {
     this.onTap,
   });
 
+  /// Creates a copy of this [DockButton] but with the given fields replaced with the new values.
+  ///
+  /// [icon], [label], [color], and [onTap] can be null if they are not to be changed.
   DockButton copyWith({
     IconData? icon,
     String? label,

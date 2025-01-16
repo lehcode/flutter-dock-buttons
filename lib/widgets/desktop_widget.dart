@@ -5,12 +5,11 @@ import 'package:dock_animate/models/dock_button.dart';
 
 class DesktopWidget extends StatefulWidget {
   final Widget child;
-  final Function(DockButton) onButtonDropped;
 
   const DesktopWidget({
     super.key,
     required this.child,
-    required this.onButtonDropped,
+    // required this.onButtonDropped,
   });
 
   @override
@@ -18,11 +17,28 @@ class DesktopWidget extends StatefulWidget {
 }
 
 class _DesktopWidgetState extends State<DesktopWidget> {
+  /// The `_isDisposed` boolean variable in the `_DesktopWidgetState` class is used to keep track
+  /// of whether the state object has been disposed or not. When the `dispose()` method is called,
+  /// `_isDisposed` is set to `true`, indicating that the state object has been disposed. This flag
+  /// is then checked in the `setState()` method override to prevent any state updates from being
+  /// performed on a disposed state object.
   bool _isDisposed = false;
+  /// `droppedIcons` is a list that keeps track of the icons that have been dropped
+  /// onto the desktop in the `DesktopWidget` class. Each `_DesktopIcon` object in
+  /// the list represents a button that has been dropped, along with its position on
+  /// the desktop. The `droppedIcons` list is updated whenever a button is dropped
+  /// outside the dock area, and the desktop is re-rendered to display these dropped
+  /// icons using `_DesktopIconWidget`.
   List<_DesktopIcon> droppedIcons = [];
+  
+  
 
   @override
   // Modify state updates to check disposed flag
+  /// Overrides the default [setState] to ensure that state updates are only
+  /// performed if the widget is not disposed and is still mounted. This prevents
+  /// attempting to update the state of a disposed widget, which can lead to
+  /// errors. The provided [fn] callback is executed if conditions are met.
   void setState(VoidCallback fn) {
     if (!_isDisposed && mounted) {
       super.setState(fn);
@@ -30,13 +46,31 @@ class _DesktopWidgetState extends State<DesktopWidget> {
   }
 
   @override
+  /// Overrides the default [dispose] method to set the `_isDisposed` flag to
+  /// `true` before calling the superclass implementation. This ensures that the
+  /// widget is marked as disposed, even if the superclass implementation does not
+  /// call [State.dispose]. This flag is then checked in the [setState] override
+  /// to prevent any state updates from being performed on a disposed widget.
   void dispose() {
     _isDisposed = true;
-    droppedIcons.clear();
     super.dispose();
   }
 
   @override
+  /// Builds the desktop widget.
+  ///
+  /// This widget displays the desktop background and renders all the icons
+  /// that have been dropped onto the desktop. It also handles the drag and
+  /// drop events for dropping icons onto the desktop. The widget is a
+  /// [DragTarget] that accepts [DockButton] objects as data. When an icon
+  /// is dropped onto the desktop, it is added to the list of dropped icons
+  /// and the desktop is re-rendered to display the new icon. The icons are
+  /// rendered at the position where they were dropped, and are displayed on
+  /// top of the desktop background.
+  ///
+  /// The widget also renders the child widget provided by the user, which is
+  /// typically the dock. The child widget is rendered at the top of the stack,
+  /// below the dropped icons.
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
@@ -71,7 +105,6 @@ class _DesktopWidgetState extends State<DesktopWidget> {
                   position: localPosition,
                 ),
               );
-              widget.onButtonDropped(button);
             });
           }
         },
@@ -79,20 +112,6 @@ class _DesktopWidgetState extends State<DesktopWidget> {
           return Stack(
             children: [
               widget.child,
-              // if (candidateData.isNotEmpty)
-              //   Container(
-              //     color: Colors.white.withOpacity(0.1),
-              //     child: const Center(
-              //       child: Text(
-              //         'Drop here to add to desktop',
-              //         style: TextStyle(
-              //           color: Colors.white,
-              //           fontSize: 24,
-              //           fontWeight: FontWeight.bold,
-              //         ),
-              //       ),
-              //     ),
-              //   ),
               ...droppedIcons.map((icon) => Positioned(
                     left: icon.position.dx - 32,
                     top: icon.position.dy - 32,

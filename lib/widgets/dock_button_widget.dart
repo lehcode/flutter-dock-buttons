@@ -41,6 +41,10 @@ class _DockButtonWidgetState extends State<DockButtonWidget> {
   bool _isDisposed = false;
 
   @override
+  /// Overrides the default [setState] to ensure that state updates are only
+  /// performed if the widget is not disposed and is still mounted. This prevents
+  /// attempting to update the state of a disposed widget, which can lead to
+  /// errors. The provided [fn] callback is executed if conditions are met.
   void setState(VoidCallback fn) {
     if (!_isDisposed && mounted) {
       super.setState(fn);
@@ -48,6 +52,10 @@ class _DockButtonWidgetState extends State<DockButtonWidget> {
   }
 
   @override
+  /// Disposes of the widget's state, clearing any drag-related states and
+  /// resetting all internal state flags to their default values. Marks the
+  /// widget as disposed to prevent further state updates. Always calls the
+  /// superclass's dispose method to complete the disposal process.
   void dispose() {
     // Clear any drag related states
     _dragStartPosition = null;
@@ -61,6 +69,10 @@ class _DockButtonWidgetState extends State<DockButtonWidget> {
     super.dispose();
   }
 
+  /// Updates the bounds of the button by getting the current render box and
+  /// calling the [onBoundsChanged] callback with the new bounds. This method
+  /// is only called if the widget is not disposed and is still mounted. If no
+  /// render box is found, the method does nothing.
   void _updateBounds() {
     if (_isDisposed || !mounted) return;
     
@@ -75,6 +87,21 @@ class _DockButtonWidgetState extends State<DockButtonWidget> {
   }
 
   @override
+  /// Builds the dock button widget.
+  ///
+  /// This widget is a [Draggable] with a [GestureDetector] as its child. The
+  /// [GestureDetector] handles tap events and updates the button's state
+  /// accordingly. The button itself is a [Stack] with an [AnimatedContainer]
+  /// as its first child and the button's icon as its second child. The
+  /// [AnimatedContainer] is used to animate the button's size and color when
+  /// it is pressed or hovered. The button's size is determined by the
+  /// [DockButtonWidget.width] and [DockButtonWidget.height] properties.
+  ///
+  /// The widget also updates the button's bounds whenever its size changes by
+  /// calling the [onBoundsChanged] callback with the new bounds. This method
+  /// is only called if the widget is not disposed and is still mounted. If no
+  /// render box is found, the method does nothing.
+  ///
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
