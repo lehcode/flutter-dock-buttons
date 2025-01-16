@@ -23,7 +23,15 @@ jobs:
       run: flutter pub get
 
     - name: Build Flutter web
-      run: flutter build web
+      run: flutter build web --release --base-href /dock_buttons/
+
+    - run: git config user.name github-actions
+    - run: git config user.email github-actions@github.com
+    
+    - run: git --work-tree build/web add --all
+    - run: git commit -m "Automatic deployment by github-actions"
+    
+    # - run: git push origin HEAD:gh-pages --force
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
