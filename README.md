@@ -11,6 +11,8 @@ A Flutter application demonstrating an animated dock interface inspired by macOS
 - Gradient background
 - Interactive button feedback
 
+![alt text](screenshot.png)
+
 ## Getting Started
 
 ### Prerequisites
