@@ -22,7 +22,7 @@ jobs:
         run: flutter pub get
         
       - name: Build
-        run: flutter build web --base-href "/flutter-dock-buttons/"
+        run: flutter build web
         
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
