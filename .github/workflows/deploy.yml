@@ -24,7 +24,7 @@ jobs:
         run: flutter pub get
         
       - name: Build
-        run: flutter build web --base-href "/${{ github.repository }}/"
+        run: flutter build web --base-href "/flutter-dock-buttons/"
         
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
@@ -32,5 +32,3 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./build/web
           commit_message: 'Deploy Flutter web app'
-          enable_jekyll: false
-          cname: ${{ github.repository }}
